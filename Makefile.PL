@@ -1,14 +1,21 @@
+#!/usr/bin/perl -w
+
 use strict;
-use inc::Module::Install;
 
-name        'Data-Thunk';
-license     'MIT';
-all_from    'lib/Data/Thunk.pm';
+use ExtUtils::MakeMaker;
 
-requires    'Class::InsideOut';
-requires    'Exporter::Lite';
+use 5.010;
 
-include_deps 'ok';
-include_deps 'Test::More';
+WriteMakefile(
+	NAME         => 'Data::Thunk',
+	VERSION_FROM => 'lib/Data/Thunk.pm',
+	INSTALLDIRS  => 'site',
+	SIGN         => 1,
+	PL_FILES     => { },
+	PREREQ_PM    => {
+		'Test::Use::ok'  => 0,
+		'Data::Swap'     => "0.07",
+		'UNIVERSAL::ref' => 0,
+	},
+);
 
-sign; WriteAll;

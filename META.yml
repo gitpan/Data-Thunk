@@ -1,15 +1,15 @@
-abstract: Calculate values on demand
-author: Audrey Tang <cpan@audreyt.org>
-distribution_type: module
-generated_by: Module::Install version 0.63
-license: MIT
-name: Data-Thunk
-no_index: 
-  directory: 
-    - inc
-    - t
-requires: 
-  Class::InsideOut: 0
-  Exporter::Lite: 0
-  perl: 5.6.0
-version: 0.01
+--- #YAML:1.0
+name:                Data-Thunk
+version:             0.01
+abstract:            ~
+license:             ~
+author:              ~
+generated_by:        ExtUtils::MakeMaker version 6.42
+distribution_type:   module
+requires:     
+    Data::Swap:                    0.07
+    Test::Use::ok:                 0
+    UNIVERSAL::ref:                0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3

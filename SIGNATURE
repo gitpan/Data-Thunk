@@ -1,5 +1,5 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.54.
+signed via the Module::Signature module, version 0.55.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
@@ -14,29 +14,16 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 a981749d02595775570abe0fd25f32d08cd2c70a MANIFEST
-SHA1 61ec276d37ca0c1ee5aed12369e6c500e1b0ce31 META.yml
-SHA1 0552157d0531b9e3a35ef34d95aca2ae14e43e60 Makefile.PL
-SHA1 5afad39edaeda3edf57002f55dc4c448aac239bf README
-SHA1 017bedfcba1e0c72b36301e6ef21b8712b84d175 inc/Module/Install.pm
-SHA1 b1a70869c098ba602151631386fc510b5bfd3511 inc/Module/Install/Base.pm
-SHA1 dd7313db23119d49ae78593bfa576554fb5b0fd8 inc/Module/Install/Can.pm
-SHA1 7c3a5153a5574556d895f23e121a41e680da11c1 inc/Module/Install/Fetch.pm
-SHA1 2e9c012e58c778a4a83c5eaea20c3aed306ad0c5 inc/Module/Install/Include.pm
-SHA1 176d68fe7c07b6ab7cfe09093078b8127bbde786 inc/Module/Install/Makefile.pm
-SHA1 8b37b38215d14f922b3d5132ce33d11d21d531ba inc/Module/Install/Metadata.pm
-SHA1 7eb44b00058c44795038d7fa4c0c77470f20a7f8 inc/Module/Install/Win32.pm
-SHA1 6d05967a5e1680b5f118315aaa6b8a1e143d79d8 inc/Module/Install/WriteAll.pm
-SHA1 f0ebc594cf8ba858ee9a840c344d9b7ea2c3c6f4 inc/Test/Builder.pm
-SHA1 a9037004a2c3096d77169a16da95743eeb813539 inc/Test/Builder/Module.pm
-SHA1 07c750f370de7a44ee7b0ed9ec30a7e89c24c9b9 inc/Test/More.pm
-SHA1 e3ccbc21f5ea44e5e64f3d3d19a8850804d5c012 inc/ok.pm
-SHA1 b7dd1470a69096e38605686f0f0ad239fb842287 lib/Data/Thunk.pm
-SHA1 e78dcf2b1512fe194513c99b316ac0a40336376a t/01-basic.t
+SHA1 080c86a82a4e1eb8156d19206f10c1d1cb6497ba MANIFEST
+SHA1 ddb918d4e02cc06f4b9fe77adeca65403f8fdd56 MANIFEST.SKIP
+SHA1 ab258242037a3d335bdaa3645d8a8f3a9ec0c03d META.yml
+SHA1 59476b6c3fe6ec8fbf1bfcc2904dff2ffabd2c49 Makefile.PL
+SHA1 b4a66c9dd2baa11ecb00f7dc3b2a9ae6779d0f02 lib/Data/Thunk.pm
+SHA1 2afd9ee5682fe116818761ac4faad1e86cdca0de t/01-basic.t
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (Darwin)
+Version: GnuPG v1.4.7 (Darwin)
 
-iD8DBQFEu8xztLPdNzw1AaARAkFkAKC+hJW6R/ydy1fBvQvGuTbefo7yAgCdH8Ja
-BPkaUubfTug3gOK5rkWCce4=
-=epAt
+iD8DBQFHgu08VCwRwOvSdBgRAiqwAJ9DCszYtuP3MZ8FauaLfMS4cfGhawCfXE1m
+Xvqxjz5DSR2ImK1GeuQtkkk=
+=1I45
 -----END PGP SIGNATURE-----
