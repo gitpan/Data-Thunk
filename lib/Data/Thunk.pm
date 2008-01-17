@@ -5,28 +5,45 @@ package Data::Thunk;
 use strict;
 use warnings;
 
+use Data::Thunk::Code;
+use Data::Thunk::ScalarValue;
+use Data::Thunk::Object;
+
 use Scalar::Util qw(blessed);
 
 use base qw(Exporter);
 
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
-our @EXPORT = our @EXPORT_OK = qw(lazy force);
+our @EXPORT = our @EXPORT_OK = qw(lazy lazy_new lazy_object force);
 
 sub lazy (&) {
 	my $thunk = shift;
 	bless { code => $thunk }, "Data::Thunk::Code";
 }
 
-my ( $vivify_code, $vivify_scalar ); # these lexicals go into the other packages' scopes
+sub lazy_new ($;@) {
+	my ( $class, %args ) = @_;
+	my $constructor = delete $args{constructor} || 'new';
+	my $args        = delete $args{args} || [];
+	&lazy_object(sub { $class->$constructor(@$args) }, %args, class => $class);
+}
+
+sub lazy_object (&;@) {
+	my ( $thunk, @args ) = @_;
+	bless { @args, code => $thunk }, "Data::Thunk::Object";
+}
+
+my ( $vivify_code, $vivify_scalar ) = ( $Data::Thunk::Code::vivify_code, $Data::Thunk::ScalarValue::vivify_scalar );
 
 sub force ($) {
 	my $val = shift;
 
 	if ( blessed($val) ) { 
-		if ( blessed($val) eq 'Data::Thunk::Code' ) {
+		no warnings; # UNIVERSAL::isa
+		if ( $val->UNIVERSAL::isa('Data::Thunk::Code') ) { # we wanna know what it's *real* class is
 			return $val->$vivify_code;
-		} elsif ( blessed($val) eq 'Data::Thunk::ScalarValue' ) {
+		} elsif ( $val->UNIVERSAL::isa('Data::Thunk::ScalarValue') ) {
 			return $val->$vivify_scalar;
 		}
 	}
@@ -37,113 +54,6 @@ sub force ($) {
 {
 	package Data::Thunk::NoOverload;
 	# we temporarily bless into this to avoid overloading
-}
-
-{
-	package Data::Thunk::Code;
-	use Data::Swap ();
-	use UNIVERSAL::ref;
-
-	use overload (
-		fallback => 1, map {
-			$_ => $vivify_code = sub {
-				bless $_[0], "Data::Thunk::NoOverload";
-
-				my $tmp = $_[0]->{code}->();
-
-				if ( CORE::ref($tmp) ) {
-					local $@;
-					eval { Data::Swap::swap $_[0], $tmp };
-
-					if ( my $e = $@ ) {
-						# try to figure out where the thunk was defined
-						my $lazy_ctx = eval {
-							require B;
-							my $cv = B::svref_2object($_[0]->{code});
-							my $file = $cv->FILE;
-							my $line = $cv->START->line;
-							"in thunk defined at $file line $line";
-						} || "at <<unknown>>";
-
-						my $file = quotemeta(__FILE__);
-						$e =~ s/ at $file line \d+.\n$/ $lazy_ctx, vivified/; # becomes "vivified at foo line blah"..
-
-						require Carp;
-						Carp::croak($e);
-					}
-
-					return $_[0];
-				} else {
-					Data::Swap::swap $_[0], do { my $o = $tmp; \$o };
-					bless $_[0], "Data::Thunk::ScalarValue";
-					return $_[0];
-				}
-			},
-		} qw( bool "" 0+ ${} @{} %{} &{} *{} )
-	);
-
-	my $vivify_and_call = sub {
-		my $method = shift;
-		$_[0]->$vivify_code();
-		goto &{$_[0]->can($method)}
-	};
-
-	sub ref {
-		CORE::ref($_[0]->$vivify_code);
-	}
-
-	foreach my $sym (keys %UNIVERSAL::) {
-		no strict 'refs';
-		*{$sym} = eval "sub {
-			if ( Scalar::Util::blessed(\$_[0]) ) {
-				unshift \@_, \$sym;
-				goto \$vivify_and_call;
-			} else {
-				shift->SUPER::$sym(\@_);
-			}
-		}";
-	}
-
-	sub AUTOLOAD {
-		my ( $self, @args ) = @_;
-		my ( $method ) = ( our $AUTOLOAD =~ /([^:]+)$/ );
-		unshift @_, $method;
-		goto $vivify_and_call;
-	}
-
-	sub DESTROY {
-		# don't create the value just to destroy it
-	}
-}
-
-{
-	package Data::Thunk::ScalarValue;
-	use UNIVERSAL::ref;
-
-	use overload (
-        fallback => 1, map {
-			$_ => $vivify_scalar = sub {
-				my $self = $_[0];
-
-				# must rebless to something unoverloaded in order to get at the value
-				bless $self, "Data::Thunk::NoOverload";
-				my $val = $$self;
-				bless $self, __PACKAGE__;
-
-				# try to replace the container with the value wherever we found it
-				local $@; eval { $_[0] = $val }; # might be readonly;
-
-				$val;
-			}
-        } qw( bool "" 0+ ${} @{} %{} &{} *{} )
-    );
-
-	sub ref {
-		my $self = shift;
-		return;
-	}
-
-	sub DESTROY { }
 }
 
 __PACKAGE__
@@ -202,22 +112,20 @@ In this particular example:
 The resulting structure is:
 
 	$VAR1 = {
-          'bar' => [
-                     'boink'
-                   ],
-          'foo' => 'blah',
-          'gorch' => $VAR1->{'bar'},
-          'quxx' => 'blah'
-        };
+		'bar' => [ 'boink' ],
+		'foo' => 'blah',
+		'gorch' => $VAR1->{'bar'},
+		'quxx' => 'blah'
+	};
 
 Whereas with L<Scalar::Defer> the trampoline objects remain:
 
 	$VAR1 = {
-			  'bar' => bless( do{\(my $o = 25206320)}, '0' ),
-			  'foo' => bless( do{\(my $o = 25387232)}, '0' ),
-			  'gorch' => $VAR1->{'bar'},
-			  'quxx' => $VAR1->{'foo'}
-			};
+		'bar' => bless( do{\(my $o = 25206320)}, '0' ),
+		'foo' => bless( do{\(my $o = 25387232)}, '0' ),
+		'gorch' => $VAR1->{'bar'},
+		'quxx' => $VAR1->{'foo'}
+	};
 
 This is potentially problematic because L<Scalar::Util/reftype> and
 L<Scalar::Util/blessed> can't be fooled. With L<Data::Thunk> the problem still
@@ -235,6 +143,26 @@ become objects don't appear to be as such.
 =item lazy { ... }
 
 Create a new thunk.
+
+=item lazy_object { }, %attrs;
+
+Creates a thunk that is expected to be an object.
+
+If the C<class> attribute is provided then C<isa> and C<can> will work as class
+methods without vivifying the object.
+
+Any other attributes in %attrs will be used to shadow method calls. If the keys
+are code references they will be invoked, otherwise they will be simply
+returned as values. This can be useful if some of your object's properties are
+known in advance.
+
+=item lazy_new $class, %args;
+
+A specialization on C<lazy_object> that can call a constructor method based on
+a class for you. The C<constructor> and C<args> arguments (method name or code
+ref, and array reference) will be removed from %args to create the thunk. They
+default to C<new> and an empty array ref by default. Then this function
+delegates to C<lazy_object>.
 
 =item force
 
@@ -263,9 +191,4 @@ Yuval Kogman E<lt>nothingmuch@woobling.orgE<gt>
 	it and/or modify it under the same terms as Perl itself.
 
 =cut
-
-
-
-=cut
-
 
