@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Data-Thunk
-version:             0.03
+version:             0.04
 abstract:            ~
 license:             ~
 author:              ~
@@ -8,7 +8,7 @@ generated_by:        ExtUtils::MakeMaker version 6.42
 distribution_type:   module
 requires:     
     Data::Swap:                    0.07
-    Test::Use::ok:                 0
+    Test::use::ok:                 0
     UNIVERSAL::ref:                0
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.3.html
