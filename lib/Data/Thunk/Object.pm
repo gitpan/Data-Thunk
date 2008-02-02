@@ -39,8 +39,12 @@ sub ref {
 
 foreach my $sym (keys %UNIVERSAL::) {
 	no strict 'refs';
+
 	next if $sym eq 'ref::';
 	next if defined &$sym;
+
+	local $@;
+
 	*{$sym} = eval "sub {
 		my ( \$self, \@args ) = \@_;
 
@@ -49,7 +53,7 @@ foreach my $sym (keys %UNIVERSAL::) {
 		} else {
 			return \$self->SUPER::$sym(\@args);
 		}
-	}";
+	}" || die $@;
 
 	warn $@ if $@;
 }
