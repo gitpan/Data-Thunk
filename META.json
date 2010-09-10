@@ -36,7 +36,7 @@
       },
       "test" : {
          "requires" : {
-            "Test::More" : 0,
+            "Test::More" : "0.89",
             "ok" : 0
          }
       }
@@ -54,7 +54,7 @@
          "web" : "http://github.com/nothingmuch/data-thunk"
       }
    },
-   "version" : "0.06",
+   "version" : "0.07",
    "x_Dist_Zilla" : {
       "plugins" : [
          {

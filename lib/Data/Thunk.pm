@@ -5,7 +5,7 @@ BEGIN {
   $Data::Thunk::AUTHORITY = 'cpan:NUFFIN';
 }
 BEGIN {
-  $Data::Thunk::VERSION = '0.06';
+  $Data::Thunk::VERSION = '0.07';
 }
 # ABSTRACT: A sneakier Scalar::Defer ;-)
 
@@ -67,7 +67,7 @@ BEGIN {
   $Data::Thunk::NoOverload::AUTHORITY = 'cpan:NUFFIN';
 }
 BEGIN {
-  $Data::Thunk::NoOverload::VERSION = '0.06';
+  $Data::Thunk::NoOverload::VERSION = '0.07';
 }
 	# we temporarily bless into this to avoid overloading
 }

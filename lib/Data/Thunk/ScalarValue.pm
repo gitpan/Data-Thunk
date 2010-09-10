@@ -5,7 +5,7 @@ BEGIN {
   $Data::Thunk::ScalarValue::AUTHORITY = 'cpan:NUFFIN';
 }
 BEGIN {
-  $Data::Thunk::ScalarValue::VERSION = '0.06';
+  $Data::Thunk::ScalarValue::VERSION = '0.07';
 }
 
 use strict;

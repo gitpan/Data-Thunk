@@ -6,7 +6,7 @@ BEGIN {
   $Data::Thunk::Code::AUTHORITY = 'cpan:NUFFIN';
 }
 BEGIN {
-  $Data::Thunk::Code::VERSION = '0.06';
+  $Data::Thunk::Code::VERSION = '0.07';
 }
 
 use strict;

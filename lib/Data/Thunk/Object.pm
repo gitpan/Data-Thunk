@@ -5,7 +5,7 @@ BEGIN {
   $Data::Thunk::Object::AUTHORITY = 'cpan:NUFFIN';
 }
 BEGIN {
-  $Data::Thunk::Object::VERSION = '0.06';
+  $Data::Thunk::Object::VERSION = '0.07';
 }
 use base qw(Data::Thunk::Code);
 

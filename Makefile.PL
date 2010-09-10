@@ -12,7 +12,7 @@ my %WriteMakefileArgs = (
   'ABSTRACT' => 'A sneakier Scalar::Defer ;-)',
   'AUTHOR' => 'Yuval Kogman',
   'BUILD_REQUIRES' => {
-    'Test::More' => '0',
+    'Test::More' => '0.89',
     'ok' => '0'
   },
   'CONFIGURE_REQUIRES' => {
@@ -35,7 +35,7 @@ my %WriteMakefileArgs = (
     'namespace::clean' => '0',
     'overload' => '0'
   },
-  'VERSION' => '0.06',
+  'VERSION' => '0.07',
   'test' => {
     'TESTS' => 't/*.t'
   }
