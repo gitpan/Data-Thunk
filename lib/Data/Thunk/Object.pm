@@ -1,18 +1,27 @@
 #!/usr/bin/perl
 
 package Data::Thunk::Object;
+BEGIN {
+  $Data::Thunk::Object::AUTHORITY = 'cpan:NUFFIN';
+}
+BEGIN {
+  $Data::Thunk::Object::VERSION = '0.06';
+}
 use base qw(Data::Thunk::Code);
 
 use strict;
 use warnings;
 
+use Scalar::Util qw(blessed reftype);
+
+use namespace::clean;
+
 use UNIVERSAL::ref;
-use Scalar::Util ();
 
 our $get_field = sub {
 	my ( $obj, $field ) = @_;
 
-	my $thunk_class = Scalar::Util::blessed($obj) or return;
+	my $thunk_class = blessed($obj) or return;
 	bless $obj, "Data::Thunk::NoOverload";
 
 	my $exists = exists $obj->{$field};
@@ -45,7 +54,7 @@ foreach my $sym (keys %UNIVERSAL::) {
 
 	local $@;
 
-	*{$sym} = eval "sub {
+	eval "sub $sym {
 		my ( \$self, \@args ) = \@_;
 
 		if ( my \$class = \$self->\$get_field('class') ) {
@@ -53,9 +62,7 @@ foreach my $sym (keys %UNIVERSAL::) {
 		} else {
 			return \$self->SUPER::$sym(\@args);
 		}
-	}" || die $@;
-
-	warn $@ if $@;
+	}; 1" || warn $@;
 }
 
 sub AUTOLOAD {
@@ -66,7 +73,7 @@ sub AUTOLOAD {
 		my ( $exists, $value ) = $self->$get_field($method);
 
 		if ( $exists ) {
-			if ( (reftype($value)||'') eq 'CODE' ) {
+			if ( CORE::ref($value) && reftype($value) eq 'CODE' ) {
 				return $self->$value(@args);
 			} else {
 				return $value;
@@ -78,6 +85,28 @@ sub AUTOLOAD {
 	goto $Data::Thunk::Code::vivify_and_call;
 }
 
-__PACKAGE__
+1;
 
 __END__
+=pod
+
+=encoding utf-8
+
+=head1 NAME
+
+Data::Thunk::Object
+
+=head1 AUTHOR
+
+Yuval Kogman
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is Copyright (c) 2010 by Yuval Kogman.
+
+This is free software, licensed under:
+
+  The MIT (X11) License
+
+=cut
+

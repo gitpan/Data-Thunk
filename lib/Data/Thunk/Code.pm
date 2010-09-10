@@ -2,28 +2,43 @@
 
 
 package Data::Thunk::Code;
+BEGIN {
+  $Data::Thunk::Code::AUTHORITY = 'cpan:NUFFIN';
+}
+BEGIN {
+  $Data::Thunk::Code::VERSION = '0.06';
+}
 
 use strict;
 use warnings;
 
-use Data::Swap ();
+use Try::Tiny;
+use Data::Swap;
+use Scalar::Util qw(reftype blessed);
+use Check::ISA;
+use Devel::Refcount qw(refcount);
+use Carp;
+
+use namespace::clean;
+
 use UNIVERSAL::ref;
-use Scalar::Util ();
 
 BEGIN {
 	our $vivify_code = sub {
 		bless $_[0], "Data::Thunk::NoOverload";
 
-		my $code = $_[0]->{code};
+		my $scalar = reftype($_[0]) eq "REF";
+		my $code = $scalar ? ${ $_[0] } : $_[0]->{code};
 		my $tmp = $_[0]->$code();
 
-		if ( CORE::ref($tmp) ) {
-			local $@;
-			eval { Data::Swap::swap $_[0], $tmp };
+		if ( CORE::ref($tmp) and refcount($tmp) == 1 ) {
+			my $ref = \$_[0]; # try doesn't get $_[0]
 
-			if ( my $e = $@ ) {
+			try {
+				swap $$ref, $tmp;
+			} catch {
 				# try to figure out where the thunk was defined
-				my $lazy_ctx = eval {
+				my $lazy_ctx = try {
 					require B;
 					my $cv = B::svref_2object($_[0]->{code});
 					my $file = $cv->FILE;
@@ -31,18 +46,23 @@ BEGIN {
 					"in thunk defined at $file line $line";
 				} || "at <<unknown>>";
 
-				my $file = quotemeta(__FILE__);
-				$e =~ s/ at $file line \d+.\n$/ $lazy_ctx, vivified/; # becomes "vivified at foo line blah"..
+				my $file = __FILE__;
+				s/ at \Q$file\E line \d+.\n$/ $lazy_ctx, vivified/; # becomes "vivified at foo line blah"..
 
-				require Carp;
-				Carp::croak($e);
-			}
+				croak($_);
+			};
 
 			return $_[0];
 		} else {
-			Data::Swap::swap $_[0], do { my $o = $tmp; \$o };
+			unless ( $scalar ) {
+				Data::Swap::swap $_[0], do { my $o; \$o };
+			}
+
+			# set up the Scalar Value overload thingy
+			${ $_[0] } = $tmp;
 			bless $_[0], "Data::Thunk::ScalarValue";
-			return $_[0];
+
+			return $tmp;
 		}
 	};
 }
@@ -51,10 +71,25 @@ our $vivify_code;
 
 use overload ( fallback => 1, map { $_ => $vivify_code } qw( bool "" 0+ ${} @{} %{} &{} *{} ) );
 
-our $vivify_and_call = sub {
+our $call_method = sub {
 	my $method = shift;
-	$_[0]->$vivify_code();
-	goto &{$_[0]->can($method)}
+
+	if ( inv($_[0]) ) {
+		if ( my $code = $_[0]->can($method) ) {
+			goto &$code;
+		} else {
+			return $_[0]->$method(@_[1 .. $#_]);
+		}
+	} elsif ( defined $_[0] ) {
+		croak qq{Can't call method "$method" without a package or object reference};
+	} else {
+		croak qq{Can't call method "$method" on an undefined value};
+	}
+};
+
+our $vivify_and_call = sub {
+	$_[1]->$vivify_code();
+	goto $call_method;
 };
 
 sub ref {
@@ -69,18 +104,17 @@ foreach my $sym (keys %UNIVERSAL::) {
 
 	local $@;
 
-	*{$sym} = eval "sub {
+	eval "sub $sym {
 		if ( Scalar::Util::blessed(\$_[0]) ) {
 			unshift \@_, '$sym';
 			goto \$vivify_and_call;
 		} else {
 			shift->SUPER::$sym(\@_);
 		}
-	}" || die $@;
+	}; 1" || warn $@;
 }
 
 sub AUTOLOAD {
-	my ( $self, @args ) = @_;
 	my ( $method ) = ( our $AUTOLOAD =~ /([^:]+)$/ );
 	unshift @_, $method;
 	goto $vivify_and_call;
@@ -90,6 +124,28 @@ sub DESTROY {
 	# don't create the value just to destroy it
 }
 
-__PACKAGE__
+1;
 
 __END__
+=pod
+
+=encoding utf-8
+
+=head1 NAME
+
+Data::Thunk::Code
+
+=head1 AUTHOR
+
+Yuval Kogman
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is Copyright (c) 2010 by Yuval Kogman.
+
+This is free software, licensed under:
+
+  The MIT (X11) License
+
+=cut
+

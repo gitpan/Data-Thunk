@@ -1,6 +1,13 @@
 #!/usr/bin/perl
 
 package Data::Thunk;
+BEGIN {
+  $Data::Thunk::AUTHORITY = 'cpan:NUFFIN';
+}
+BEGIN {
+  $Data::Thunk::VERSION = '0.06';
+}
+# ABSTRACT: A sneakier Scalar::Defer ;-)
 
 use strict;
 use warnings;
@@ -11,15 +18,18 @@ use Data::Thunk::Object;
 
 use Scalar::Util qw(blessed);
 
-use base qw(Exporter);
+use namespace::clean;
 
-our $VERSION = "0.05";
-
-our @EXPORT = our @EXPORT_OK = qw(lazy lazy_new lazy_object force);
+use Sub::Exporter -setup => {
+	exports => [qw(lazy lazy_new lazy_object force)],
+	groups => {
+		default => [':all'],
+	},
+};
 
 sub lazy (&) {
 	my $thunk = shift;
-	bless { code => $thunk }, "Data::Thunk::Code";
+	bless \$thunk, "Data::Thunk::Code";
 }
 
 sub lazy_new ($;@) {
@@ -39,7 +49,7 @@ my ( $vivify_code, $vivify_scalar ) = ( $Data::Thunk::Code::vivify_code, $Data::
 sub force ($) {
 	my $val = shift;
 
-	if ( blessed($val) ) { 
+	if ( blessed($val) ) {
 		no warnings; # UNIVERSAL::isa
 		if ( $val->UNIVERSAL::isa('Data::Thunk::Code') ) { # we wanna know what it's *real* class is
 			return $val->$vivify_code;
@@ -53,14 +63,23 @@ sub force ($) {
 
 {
 	package Data::Thunk::NoOverload;
+BEGIN {
+  $Data::Thunk::NoOverload::AUTHORITY = 'cpan:NUFFIN';
+}
+BEGIN {
+  $Data::Thunk::NoOverload::VERSION = '0.06';
+}
 	# we temporarily bless into this to avoid overloading
 }
 
-__PACKAGE__
+1;
+
+
 
 __END__
-
 =pod
+
+=encoding utf-8
 
 =head1 NAME
 
@@ -174,21 +193,17 @@ Vivify the value and return the result.
 
 L<Scalar::Defer>, L<Data::Lazy>, L<Data::Swap>, L<UNIVERSAL::ref>.
 
-=head1 VERSION CONTROL
-
-This module is maintained using Darcs. You can get the latest version from
-L<http://nothingmuch.woobling.org/code>, and use C<darcs send> to commit
-changes.
-
 =head1 AUTHOR
 
-Yuval Kogman E<lt>nothingmuch@woobling.orgE<gt>
+Yuval Kogman
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-	Copyright (c) 2008 Yuval Kogman. All rights reserved
-	This program is free software; you can redistribute
-	it and/or modify it under the same terms as Perl itself.
+This software is Copyright (c) 2010 by Yuval Kogman.
+
+This is free software, licensed under:
+
+  The MIT (X11) License
 
 =cut
 
